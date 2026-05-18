@@ -7,6 +7,7 @@ export default function CustomerLayout() {
       <Stack.Screen name="home" />
       <Stack.Screen name="new-return" />
       <Stack.Screen name="live-tracking" options={{ animation: 'slide_from_bottom' }} />
+      <Stack.Screen name="rate-runner" options={{ animation: 'slide_from_bottom', gestureEnabled: false }} />
     </Stack>
   );
 }

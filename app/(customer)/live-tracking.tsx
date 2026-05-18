@@ -272,7 +272,16 @@ export default function LiveTracking() {
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'jobs', filter: `id=eq.${jobId}` },
         (payload) => {
-          setJob((prev) => prev ? { ...prev, ...payload.new } : null);
+          const updated = payload.new as Job;
+          setJob((prev) => prev ? { ...prev, ...updated } : null);
+
+          // Navigate straight to rating screen when runner marks job complete
+          if (updated.status === 'complete' && updated.runner_id) {
+            router.replace({
+              pathname: '/(customer)/rate-runner',
+              params: { jobId: updated.id, runnerId: updated.runner_id },
+            });
+          }
         },
       )
       .subscribe();

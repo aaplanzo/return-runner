@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -155,6 +155,8 @@ export default function CustomerHome() {
   const [pastJobs, setPastJobs] = useState<Job[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  // Prevent double-navigation if Realtime fires while live-tracking is also subscribed
+  const ratingPromptedRef = useRef<string | null>(null);
 
   const fetchJobs = useCallback(async () => {
     if (!profile?.id) return;
@@ -192,7 +194,25 @@ export default function CustomerHome() {
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'jobs', filter: `customer_id=eq.${profile.id}` },
-        () => fetchJobs(),
+        (payload) => {
+          // Navigate to rating screen the moment a job transitions to complete
+          if (
+            payload.eventType === 'UPDATE' &&
+            (payload.new as Job).status === 'complete' &&
+            (payload.new as Job).runner_id &&
+            ratingPromptedRef.current !== (payload.new as Job).id
+          ) {
+            ratingPromptedRef.current = (payload.new as Job).id;
+            router.push({
+              pathname: '/(customer)/rate-runner',
+              params: {
+                jobId: (payload.new as Job).id,
+                runnerId: (payload.new as Job).runner_id!,
+              },
+            });
+          }
+          fetchJobs();
+        },
       )
       .subscribe();
 
