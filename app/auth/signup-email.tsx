@@ -16,6 +16,8 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { supabase } from '@/lib/supabase';
 import { Colors, FontFamily, Radius, Spacing } from '@/lib/theme';
+import { PhoneInput } from '@/components/PhoneInput';
+import { AddressAutocomplete } from '@/components/AddressAutocomplete';
 
 export default function SignupEmail() {
   const { email: prefillEmail } = useLocalSearchParams<{ email: string }>();
@@ -25,6 +27,8 @@ export default function SignupEmail() {
   const [email, setEmail] = useState(prefillEmail ?? '');
   const [phone, setPhone] = useState('');
   const [pickupAddress, setPickupAddress] = useState('');
+  const [pickupLat, setPickupLat] = useState<number | undefined>();
+  const [pickupLng, setPickupLng] = useState<number | undefined>();
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -71,6 +75,8 @@ export default function SignupEmail() {
         email: email.trim(),
         phone: phone.trim(),
         pickup_address: pickupAddress.trim(),
+        pickup_lat: pickupLat ?? null,
+        pickup_lng: pickupLng ?? null,
       });
 
       if (profileError) throw profileError;
@@ -152,31 +158,25 @@ export default function SignupEmail() {
 
             <View style={styles.field}>
               <Text style={styles.label}>Phone number</Text>
-              <TextInput
+              <PhoneInput
                 style={styles.input}
                 placeholder="(555) 555-5555"
                 placeholderTextColor={Colors.textSecondary}
                 value={phone}
                 onChangeText={setPhone}
-                keyboardType="phone-pad"
-                autoComplete="tel"
                 returnKeyType="next"
               />
             </View>
 
-            <View style={styles.field}>
-              <Text style={styles.label}>Home pickup address</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="123 Main St, City, State, ZIP"
-                placeholderTextColor={Colors.textSecondary}
-                value={pickupAddress}
-                onChangeText={setPickupAddress}
-                autoCapitalize="words"
-                autoComplete="street-address"
-                returnKeyType="next"
-              />
-            </View>
+            <AddressAutocomplete
+              label="Home pickup address"
+              placeholder="123 Main St, City, State, ZIP"
+              onSelect={(address, lat, lng) => {
+                setPickupAddress(address);
+                setPickupLat(lat);
+                setPickupLng(lng);
+              }}
+            />
 
             <View style={styles.field}>
               <Text style={styles.label}>Password</Text>

@@ -17,6 +17,8 @@ import { StatusBar } from 'expo-status-bar';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/store/auth';
 import { Colors, FontFamily, Radius, Spacing } from '@/lib/theme';
+import { PhoneInput } from '@/components/PhoneInput';
+import { AddressAutocomplete } from '@/components/AddressAutocomplete';
 
 export default function OAuthConfirm() {
   const { session, profile } = useAuthStore();
@@ -39,6 +41,8 @@ export default function OAuthConfirm() {
   const [lastName, setLastName] = useState(derivedLastName);
   const [phone, setPhone] = useState(profile?.phone ?? '');
   const [pickupAddress, setPickupAddress] = useState(profile?.pickup_address ?? '');
+  const [pickupLat, setPickupLat] = useState<number | undefined>(profile?.pickup_lat ?? undefined);
+  const [pickupLng, setPickupLng] = useState<number | undefined>(profile?.pickup_lng ?? undefined);
   const [isLoading, setIsLoading] = useState(false);
 
   const displayEmail = profile?.email ?? session?.user?.email ?? '';
@@ -74,6 +78,8 @@ export default function OAuthConfirm() {
         email: displayEmail,
         phone: phone.trim(),
         pickup_address: pickupAddress.trim(),
+        pickup_lat: pickupLat ?? null,
+        pickup_lng: pickupLng ?? null,
       });
 
       if (upsertError) throw upsertError;
@@ -148,30 +154,26 @@ export default function OAuthConfirm() {
 
             <View style={styles.field}>
               <Text style={styles.label}>Phone number</Text>
-              <TextInput
+              <PhoneInput
                 style={styles.input}
                 placeholder="(555) 555-5555"
                 placeholderTextColor={Colors.textSecondary}
                 value={phone}
                 onChangeText={setPhone}
-                keyboardType="phone-pad"
-                autoComplete="tel"
                 returnKeyType="next"
               />
             </View>
 
             <View style={styles.field}>
-              <Text style={styles.label}>Home pickup address</Text>
-              <TextInput
-                style={styles.input}
+              <AddressAutocomplete
+                label="Home pickup address"
                 placeholder="123 Main St, City, State, ZIP"
-                placeholderTextColor={Colors.textSecondary}
-                value={pickupAddress}
-                onChangeText={setPickupAddress}
-                autoCapitalize="words"
-                autoComplete="street-address"
-                returnKeyType="done"
-                onSubmitEditing={handleComplete}
+                defaultValue={pickupAddress}
+                onSelect={(address, lat, lng) => {
+                  setPickupAddress(address);
+                  setPickupLat(lat);
+                  setPickupLng(lng);
+                }}
               />
               <Text style={styles.hint}>
                 Used as your default package pickup location.
