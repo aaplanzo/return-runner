@@ -26,6 +26,7 @@ export interface Database {
           is_online: boolean;
           current_lat: number | null;
           current_lng: number | null;
+          expo_push_token: string | null;
           created_at: string;
         };
         Insert: {
@@ -49,6 +50,7 @@ export interface Database {
           is_online?: boolean;
           current_lat?: number | null;
           current_lng?: number | null;
+          expo_push_token?: string | null;
           created_at?: string;
         };
         Update: {
@@ -72,6 +74,7 @@ export interface Database {
           is_online?: boolean;
           current_lat?: number | null;
           current_lng?: number | null;
+          expo_push_token?: string | null;
           created_at?: string;
         };
         Relationships: [];

@@ -11,6 +11,7 @@ import { SpaceMono_400Regular } from '@expo-google-fonts/space-mono';
 import * as SplashScreen from 'expo-splash-screen';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/store/auth';
+import { registerForPushNotifications } from '@/lib/notifications';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -54,6 +55,11 @@ export default function RootLayout() {
 
     setProfile(data);
     setLoading(false);
+
+    // Register for push notifications (no-ops on simulator / if denied)
+    if (data?.id) {
+      registerForPushNotifications(data.id).catch(() => {});
+    }
 
     // OAuth users land here before completing their profile
     if (!data?.phone || !data?.pickup_address) {
