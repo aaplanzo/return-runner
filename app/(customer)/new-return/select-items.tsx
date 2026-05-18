@@ -190,7 +190,7 @@ function NotConnectedState() {
       </TouchableOpacity>
       <TouchableOpacity
         style={styles.manualLink}
-        onPress={() => router.push('/(customer)/new-return/confirm')}
+        onPress={() => router.push('/(customer)/new-return/qr-per-item')}
         activeOpacity={0.6}
       >
         <Text style={styles.manualLinkText}>Enter items manually instead</Text>
@@ -227,7 +227,7 @@ export default function SelectItems() {
       orderId: o.orderId,
     }));
     router.push({
-      pathname: '/(customer)/new-return/confirm',
+      pathname: '/(customer)/new-return/qr-per-item',
       params: { items: JSON.stringify(items) },
     });
   }
