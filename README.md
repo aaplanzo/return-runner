@@ -39,7 +39,7 @@ Stripe Connect handles three-way payment splitting automatically
 
 Pricing Model
 
-$4.00 flat per package
+$3.85 flat per package
 $1.00 per mile (customer door to dropoff location)
 Platform keeps 25% of base fare
 Runner earns 75% of base fare + 100% of tips
