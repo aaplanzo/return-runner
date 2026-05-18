@@ -21,7 +21,7 @@ import { Colors, FontFamily, Radius, Spacing } from '@/lib/theme';
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const MOCK_DISTANCE_MI = 3.2;
-const PER_ITEM_FARE = 4.0;
+const PER_ITEM_FARE = 3.85;
 const PER_MILE_FARE = 1.0;
 const PLATFORM_RATE = 0.25;
 
@@ -239,7 +239,7 @@ export default function Checkout() {
           <SectionLabel text="Pricing" />
           <View style={styles.card}>
             <PriceRow
-              label={`${items.length} package${items.length !== 1 ? 's' : ''} × $4.00`}
+              label={`${items.length} package${items.length !== 1 ? 's' : ''} × $3.85`}
               value={`$${packageFare.toFixed(2)}`}
             />
             <View style={styles.priceDividerThin} />
