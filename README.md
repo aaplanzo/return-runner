@@ -4,7 +4,7 @@ Think Uber — but for package returns.
 What It Does
 Customers leave packages on their porch. Runners pick them up and return them to stores like Amazon dropoff locations, UPS Store, Kohl's, and Whole Foods. The platform handles matching, routing, payments, and verification automatically.
 The Problem It Solves
-Americans make over 3 million Amazon returns every day. Most sit in corners for weeks because nobody wants to make the trip. Return Runner eliminates that friction — $4.00 per item plus $1.00 per mile, picked up from your door.
+Americans make over 3 million Amazon returns every day. Most sit in corners for weeks because nobody wants to make the trip. Return Runner eliminates that friction — picked up from your door.
 Tech Stack
 LayerTechnologyMobileReact Native via Expo (iOS + Android)NavigationExpo RouterBackendSupabase (PostgreSQL, Auth, Storage, Realtime)PaymentsStripe Connect (marketplace model)MapsGoogle Maps SDKNotificationsExpo Push NotificationsPhone MaskingTwilio Proxy APIState ManagementZustand
 Architecture
