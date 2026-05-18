@@ -73,12 +73,17 @@ function packageLabel(count: number | null): string {
 
 function ActiveBanner({ job }: { job: Job }) {
   const cfg = STATUS_CONFIG[job.status];
+  const canTrack = job.runner_id != null && job.status !== 'pending';
 
   return (
     <TouchableOpacity
       style={[styles.bannerCard, { backgroundColor: cfg.bg }]}
       activeOpacity={0.8}
-      onPress={() => router.push({ pathname: '/(customer)/job-detail', params: { id: job.id } })}
+      onPress={() => {
+        if (canTrack) {
+          router.push({ pathname: '/(customer)/live-tracking', params: { jobId: job.id } });
+        }
+      }}
     >
       {/* Left accent strip */}
       <View style={[styles.bannerAccent, { backgroundColor: cfg.dot }]} />
@@ -99,8 +104,15 @@ function ActiveBanner({ job }: { job: Job }) {
         </Text>
       </View>
 
-      {/* Chevron */}
-      <Text style={styles.bannerChevron}>›</Text>
+      {/* Chevron / track cue */}
+      {canTrack ? (
+        <View style={styles.bannerTrackCue}>
+          <Text style={styles.bannerTrackCueText}>Track</Text>
+          <Text style={styles.bannerChevron}>›</Text>
+        </View>
+      ) : (
+        <Text style={styles.bannerChevron}>›</Text>
+      )}
     </TouchableOpacity>
   );
 }
@@ -372,6 +384,17 @@ const styles = StyleSheet.create({
     fontSize: 24,
     color: Colors.textSecondary,
     paddingRight: Spacing.md,
+  },
+  bannerTrackCue: {
+    alignItems: 'center',
+    paddingRight: Spacing.sm,
+  },
+  bannerTrackCueText: {
+    fontFamily: FontFamily.semiBold,
+    fontSize: 10,
+    color: Colors.primary,
+    letterSpacing: 0.3,
+    textTransform: 'uppercase',
   },
 
   // Past returns list
