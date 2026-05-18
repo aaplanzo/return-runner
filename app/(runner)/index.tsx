@@ -12,9 +12,13 @@ import * as Location from 'expo-location';
 import type { LocationSubscription } from 'expo-location';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import { router } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/store/auth';
 import { Colors, FontFamily, Radius, Spacing } from '@/lib/theme';
+import type { Database } from '@/lib/database.types';
+
+type Job = Database['public']['Tables']['jobs']['Row'];
 
 // Default map center: St. Petersburg, FL
 const DEFAULT_REGION: Region = {
@@ -45,6 +49,36 @@ export default function RunnerHome() {
   );
   // Placeholder — real earnings would come from a Supabase query
   const [todayEarnings] = useState(0);
+
+  // Subscribe to pending jobs while online
+  useEffect(() => {
+    if (!profile?.id || !isOnline) return;
+
+    const channel = supabase
+      .channel(`runner-pending-jobs-${profile.id}`)
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'jobs', filter: 'status=eq.pending' },
+        async (payload) => {
+          const job = payload.new as Job;
+          if (job.runner_id && job.runner_id !== profile.id) return;
+
+          const { data: declined } = await supabase
+            .from('job_declines')
+            .select('id')
+            .eq('job_id', job.id)
+            .eq('runner_id', profile.id)
+            .maybeSingle();
+
+          if (!declined) {
+            router.push({ pathname: '/(runner)/job-ping', params: { jobId: job.id } });
+          }
+        },
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [isOnline, profile?.id]);
 
   // Get current location on mount to center the map
   useEffect(() => {
