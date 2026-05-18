@@ -29,7 +29,7 @@
     },
     "plugins": [
       "expo-router",
-      "@stripe/stripe-react-native",
+      ["@stripe/stripe-react-native", { "merchantIdentifier": "merchant.com.returnrunner" }],
       "expo-barcode-scanner",
       "expo-font",
       "expo-web-browser",
