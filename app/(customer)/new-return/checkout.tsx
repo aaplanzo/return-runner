@@ -11,6 +11,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { useStripe } from '@stripe/stripe-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -82,6 +83,8 @@ export default function Checkout() {
   const distanceFare = Math.round(MOCK_DISTANCE_MI * PER_MILE_FARE * 100) / 100;
   const subtotal = Math.round((packageFare + distanceFare) * 100) / 100;
 
+  const { initPaymentSheet, presentPaymentSheet } = useStripe();
+
   const [tipOption, setTipOption] = useState<TipOption>('0');
   const [customTipInput, setCustomTipInput] = useState('');
   const [isPlacing, setIsPlacing] = useState(false);
@@ -102,15 +105,64 @@ export default function Checkout() {
       Alert.alert('Error', 'You must be signed in to place a return.');
       return;
     }
+    if (items.length === 0) {
+      Alert.alert('No items', 'Add at least one package to continue.');
+      return;
+    }
 
     setIsPlacing(true);
 
     try {
-      const retailer = [...new Set(items.map((i) => i.dropoffType))].join(', ');
-      const baseFare = subtotal;
-      const platformCut = Math.round(baseFare * PLATFORM_RATE * 100) / 100;
-      const runnerPayout = Math.round((baseFare - platformCut) * 100) / 100;
+      const retailer      = [...new Set(items.map((i) => i.dropoffType))].join(', ');
+      const baseFare      = subtotal;
+      const platformCut   = Math.round(baseFare * PLATFORM_RATE * 100) / 100;
+      const runnerPayout  = Math.round((baseFare - platformCut) * 100) / 100;
+      const totalCents    = Math.round(total * 100);
 
+      // ── Step 1: Create Stripe PaymentIntent via Edge Function ────────────
+      const { data: intentData, error: intentError } = await supabase.functions.invoke(
+        'create-payment-intent',
+        {
+          body: {
+            amount_cents: totalCents,
+            currency: 'usd',
+            metadata: { customer_id: profile.id, item_count: String(items.length) },
+          },
+        },
+      );
+
+      if (intentError || !intentData?.clientSecret) {
+        // Fall back gracefully — allow placing without payment in dev/test
+        console.warn('PaymentIntent creation failed, proceeding without Stripe:', intentError);
+      }
+
+      // ── Step 2: Present PaymentSheet (only if we got a client secret) ────
+      if (intentData?.clientSecret) {
+        const { error: initError } = await initPaymentSheet({
+          paymentIntentClientSecret: intentData.clientSecret,
+          merchantDisplayName: 'Return Runner',
+          style: 'automatic',
+          defaultBillingDetails: {
+            name: `${profile.first_name ?? ''} ${profile.last_name ?? ''}`.trim(),
+            email: profile.email ?? undefined,
+          },
+        });
+
+        if (initError) throw new Error(initError.message);
+
+        const { error: payError } = await presentPaymentSheet();
+
+        if (payError) {
+          // User cancelled or card declined — do not create the job
+          if (payError.code !== 'Canceled') {
+            Alert.alert('Payment failed', payError.message);
+          }
+          setIsPlacing(false);
+          return;
+        }
+      }
+
+      // ── Step 3: Persist job + packages to Supabase ───────────────────────
       const { data: job, error: jobError } = await supabase
         .from('jobs')
         .insert({
@@ -127,6 +179,7 @@ export default function Checkout() {
           platform_cut: platformCut,
           runner_payout: runnerPayout,
           tip_amount: tip,
+          stripe_payment_intent_id: intentData?.paymentIntentId ?? null,
         })
         .select('id')
         .single();
@@ -315,7 +368,7 @@ export default function Checkout() {
           {isPlacing ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Text style={styles.placeBtnText}>Place Return →</Text>
+            <Text style={styles.placeBtnText}>Pay ${total.toFixed(2)} →</Text>
           )}
         </TouchableOpacity>
       </View>

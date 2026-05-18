@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { Stack, router } from 'expo-router';
+import { StripeProvider } from '@stripe/stripe-react-native';
 import { useFonts } from 'expo-font';
 import {
   Inter_400Regular,
@@ -81,11 +82,17 @@ export default function RootLayout() {
   if (!fontsLoaded || isLoading) return null;
 
   return (
+    <StripeProvider
+      publishableKey={process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? 'pk_test_placeholder'}
+      urlScheme="returnrunner"
+      merchantIdentifier="merchant.com.returnrunner"
+    >
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="auth" />
       <Stack.Screen name="(customer)" />
       <Stack.Screen name="(runner)" />
       <Stack.Screen name="(admin)" />
     </Stack>
+    </StripeProvider>
   );
 }
